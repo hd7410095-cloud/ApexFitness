@@ -2,6 +2,8 @@ from flask import Flask, request, redirect, url_for, session, render_template_st
 import sqlite3
 from datetime import datetime, timedelta
 from functools import wraps
+import os
+import secrets
 
 # ============================================================
 # APEX FITNESS - GYM MANAGEMENT SYSTEM
@@ -12,8 +14,10 @@ from functools import wraps
 # ============================================================
 
 app = Flask(__name__)
-app.secret_key = "apex-fitness-presentation-secret-key"
-DB_NAME = "apex_fitness.db"
+# Use a Render environment variable in production; generate a temporary key for local development.
+app.secret_key = os.environ.get("SECRET_KEY") or secrets.token_hex(32)
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_NAME = os.path.join(BASE_DIR, "apex_fitness.db")
 
 PLANS = {
     "Basic": {"days": 30, "price": 999},
@@ -116,6 +120,9 @@ def update_expired_members():
 
     conn.commit()
     conn.close()
+
+
+initialize_database()
 
 
 def scalar(sql, params=()):
@@ -1038,4 +1045,5 @@ if __name__ == "__main__":
     print("Website: http://127.0.0.1:5000")
     print("Press CTRL+C to stop the server.")
     print("=" * 60)
-    app.run(host="127.0.0.1", port=5000, debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
